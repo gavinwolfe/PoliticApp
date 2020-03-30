@@ -8,25 +8,120 @@
 
 import UIKit
 import CoreData
+import Firebase
+import Kingfisher
+import AVFoundation
+import OneSignal
+
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
+   // var onceCall = false
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
-        return true
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        
+        FirebaseApp.configure()
+        
+        let onesignalInitSettings = [kOSSettingsKeyAutoPrompt: false]
+        
+        let notificationOpenedBlock: OSHandleNotificationActionBlock = { result in
+            // This block gets called when the user reacts to a notification received
+            let payload: OSNotificationPayload = result!.notification.payload
+            let tabBar: UITabBarController = self.window?.rootViewController as! UITabBarController
+            tabBar.selectedIndex = 2
+            var fullMessage = payload.body
+            print("Message = \(String(describing: fullMessage))")
+            print("OPENED MESS")
+            if payload.additionalData != nil {
+                if payload.title != nil {
+                    let messageTitle = payload.title
+//                    print("payload.category \(payload.category)")
+//                    print("payload.subtitle \(payload.subtitle)")
+                    print("Message Title = \(messageTitle!)")
+                }
+                
+                let additionalData = payload.additionalData
+                if additionalData?["actionSelected"] != nil {
+                    fullMessage = fullMessage! + "\nPressed ButtonID: \(String(describing: additionalData!["actionSelected"]))"
+                }
+            }
+        }
+        let notificationReceivedBlock: OSHandleNotificationReceivedBlock = { notification in
+            if application.applicationState == .active {
+                
+            } else {
+             let tabBar: UITabBarController = self.window?.rootViewController as! UITabBarController
+           tabBar.selectedIndex = 2
+            }
+        }
+        
+        if #available(iOS 13.0, *) {
+            window!.overrideUserInterfaceStyle = .light
+        } else {
+            // Fallback on earlier versions
+        }
+        
+        // Replace 'YOUR_APP_ID' with your OneSignal App ID.
+        OneSignal.initWithLaunchOptions(launchOptions, appId: "8e5d1fa1-a812-44cb-8a4a-117af95ce842", handleNotificationReceived: notificationReceivedBlock, handleNotificationAction: notificationOpenedBlock, settings: onesignalInitSettings)
+        
+        OneSignal.inFocusDisplayType = OSNotificationDisplayType.notification;
+        
+        // Recommend moving the below line to prompt for push after informing the user about
+        //   how your app will use them.
+        if Auth.auth().currentUser?.uid != nil {
+      callNotifs()
+        }
+        
+//        try? AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.ambient)
+//        try? AVAudioSession.sharedInstance().setActive(true)
+        
+        ImageCache.default.memoryStorage.config.totalCostLimit = 1024 * 1024 * 100
+        
+        dataLogos()
+        
+      
+        
+      return true
     }
-
+    
+    func callNotifs () {
+        OneSignal.promptForPushNotifications(userResponse: { accepted in
+            print("User accepted notifications: \(accepted)")
+        })
+    }
+    
+    
+    func dataLogos () {
+        var indent = 1
+         if let mySavedDes = UserDefaults.standard.value(forKey: "dataLog") as? Int {
+            if mySavedDes < 4 {
+                indent = mySavedDes + 1
+                 UserDefaults.standard.set(indent, forKey: "dataLog")
+                return
+            }
+        
+         } else {
+            UserDefaults.standard.set(indent, forKey: "dataLog")
+        }
+        
+    }
+    
+    
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
     }
+    
+    func openRecievedNotif () {
+        
+    }
 
     func applicationDidEnterBackground(_ application: UIApplication) {
-        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
+        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore
+        //your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
     }
 
@@ -42,6 +137,49 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
         // Saves changes in the application's managed object context before the application terminates.
         self.saveContext()
+    }
+    
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        
+        let status: OSPermissionSubscriptionState = OneSignal.getPermissionSubscriptionState()
+        
+        let userID = status.subscriptionStatus.userId
+        
+        let pushToken = status.subscriptionStatus.pushToken
+        
+        if pushToken != nil {
+            
+            if let playerID = userID {
+                
+                if let uid = Auth.auth().currentUser?.uid  {
+                    if Auth.auth().currentUser?.isAnonymous == false {
+                    let ref = Database.database().reference()
+                    ref.child("users").child(uid).child("userKey").observeSingleEvent(of: .value, with: { (snapshot) in
+                        
+                        if snapshot.exists() {
+                            if let toker = snapshot.value as? String {
+                                if toker == playerID {
+                                    print(toker)
+                                } else {
+                                    ref.child("users").child(uid).updateChildValues(["userKey" : playerID])
+                                    
+                                    //change token if different from current device
+                                }
+                            }
+                            
+                        } else {
+                            
+                            ref.child("users").child(uid).updateChildValues(["userKey" : playerID])
+                        }
+                    })
+                    }
+                }
+                 UserDefaults.standard.set(playerID, forKey: "userKey")
+            }
+        }
+        
+        OneSignal.sendTag("myType", value: "myBroadCast")
+        
     }
 
     // MARK: - Core Data stack

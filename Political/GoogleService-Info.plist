@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>888303416167-lriirqclrkvleeomjrme3e5692uhqf65.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.888303416167-lriirqclrkvleeomjrme3e5692uhqf65</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBCfv6dPdCr5SdAwzQbatc3gT_8NzCng5Q</string>
+	<key>GCM_SENDER_ID</key>
+	<string>888303416167</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>BerlarkSoftware.Political</string>
+	<key>PROJECT_ID</key>
+	<string>politic-14ebf</string>
+	<key>STORAGE_BUCKET</key>
+	<string>politic-14ebf.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:888303416167:ios:9719631358d730f9</string>
+	<key>DATABASE_URL</key>
+	<string>https://politic-14ebf.firebaseio.com</string>
+</dict>
+</plist>
